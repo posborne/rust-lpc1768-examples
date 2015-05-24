@@ -1,0 +1,27 @@
+[package]
+name = "lpc1768-app-board-demos"
+version = "0.1.0"
+authors = ["Paul Osborne <osbpau@gmail.com>"]
+
+[dependencies.zinc]
+git = "https://github.com/mcoffin/zinc.git"
+branch = "new-build"
+features = ["lpc17xx"]
+
+[dependencies.macro_platformtree]
+git = "https://github.com/mcoffin/zinc.git"
+branch = "new-build"
+path = "macro_platformtree"
+
+[dependencies.ioreg]
+git = "https://github.com/mcoffin/zinc.git"
+branch = "new-build"
+path = "ioreg"
+
+[dependencies.platformtree]
+git = "https://github.com/mcoffin/zinc.git"
+branch = "new-build"
+path = "platformtree"
+
+[dependencies.core]
+git = "https://github.com/bharrisau/rust-libcore"
