@@ -12,6 +12,10 @@
 extern crate core;
 extern crate zinc;
 
+use zinc::hal::timer::Timer;
+use zinc::hal::lpc17xx::pin;
+use zinc::hal::pin::Gpio;
+
 // This example shows use of the RGB LED that is availble on the MBED
 // Application Board.  The LED is connected to 3 pins coming
 // from the MBED LPC1768.  Here's the mapping:
@@ -61,15 +65,31 @@ platformtree!(
     }
 );
 
+
+fn drive_pwm(timer: &Timer, gpio: &pin::Pin, period_us: u32, pulsewidth_us: u32, duration_us: u32) {
+    // drive pwm for at least the specified duration_us
+    let num_cycles: u32 = (duration_us + (period_us - 1)) / period_us;
+    for _ in 0..num_cycles {
+        gpio.set_low();
+        timer.wait_us(pulsewidth_us);
+        gpio.set_high();
+        timer.wait_us(period_us - pulsewidth_us);
+    }
+} 
+
+
+fn do_color(timer: &Timer, gpio: &pin::Pin) {
+    for i in 0..100 {
+        drive_pwm(timer, gpio, 100, i, 10_000); // 10ms
+    }
+}
+
 fn run(args: &pt::run_args) {
-    use zinc::hal::pin::Gpio;
-    use zinc::hal::timer::Timer;
+    for gpio in &[args.rgb_red, args.rgb_green, args.rgb_blue] {
+        args.rgb_red.set_high();
+        args.rgb_green.set_high();
+        args.rgb_blue.set_high();
 
-    args.rgb_green.set_high();
-    args.rgb_blue.set_high();
-
-    args.rgb_red.set_high();
-    args.timer.wait_us(0);
-    args.rgb_red.set_low();
-    args.timer.wait_us(1000);
+        do_color(args.timer, gpio);
+    }
 }
