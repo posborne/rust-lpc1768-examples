@@ -14,6 +14,8 @@ extern crate zinc;
 
 use zinc::hal::timer::Timer;
 use zinc::hal::pin::Gpio;
+use zinc::hal::lpc17xx::pwm;
+use zinc::hal::pwm::PWMOutput;
 
 // This example shows use of the RGB LED that is availble on the MBED
 // Application Board.  The LED is connected to 3 pins coming
@@ -44,9 +46,18 @@ platformtree!(
 
         gpio {
             2 {
-                rgb_red@3 { direction = "out"; }
-                rgb_green@2 { direction = "out"; }
-                rgb_blue@1 { direction = "out"; }
+                rgb_red@3 {
+                    direction = "out";
+                    function = "pwm1_4";
+                }
+                rgb_green@2 {
+                    direction = "out";
+//                    function = "pwm1_3";
+                }
+                rgb_blue@1 {
+                    direction = "out";
+//                    function = "pwm1_2";
+                }
             }
         }
     }
@@ -64,31 +75,30 @@ platformtree!(
     }
 );
 
-
-fn drive_pwm(timer: &Timer, gpio: &Gpio, period_us: u32, pulsewidth_us: u32, duration_us: u32) {
-    // drive pwm for at least the specified duration_us
-    let num_cycles: u32 = (duration_us + (period_us - 1)) / period_us;
-    for _ in 0..num_cycles {
-        gpio.set_low();
-        timer.wait_us(pulsewidth_us);
-        gpio.set_high();
-        timer.wait_us(period_us - pulsewidth_us);
-    }
-} 
-
-
-fn do_color(timer: &Timer, gpio: &Gpio) {
+fn do_color(timer: &Timer, pwm: &mut pwm::PWM) {
     for i in 0..100 {
-        drive_pwm(timer, gpio, 100, i, 10_000); // 10ms
+        pwm.write(i as f32 / 100.0f32);
+        timer.wait_ms(10);
     }
 }
 
 fn run(args: &pt::run_args) {
-    for &gpio in &[args.rgb_red, args.rgb_green, args.rgb_blue] {
-        args.rgb_red.set_high();
-        args.rgb_green.set_high();
-        args.rgb_blue.set_high();
+    let pwm_red = pwm::PWM::new(pwm::PWMChannel::CHANNEL3);
+//    let mut pwm_green = pwm::PWM::new(pwm::PWMChannel::CHANNEL2);
+//    let mut pwm_blue = pwm::PWM::new(pwm::PWMChannel::CHANNEL1);
 
-        do_color(args.timer, gpio);
+    args.rgb_green.set_high();
+    args.rgb_blue.set_high();
+
+    for pwm in &mut [pwm_red] {
+        // pwm_red.write(1.0);
+        // pwm_green.write(1.0);
+        //pwm_blue.write(1.0);
+//        pwm_red.set_pulsewidth_us(0);
+  //      pwm_green.set_pulsewidth_us(0);
+    //    pwm_blue.set_pulsewidth_us(0);
+
+        pwm.set_period_us(10_000); // 10ms
+        do_color(args.timer, pwm);
     }
 }
